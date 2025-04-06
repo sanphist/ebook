@@ -30,11 +30,11 @@
       top: 10px;
       right: 10px;
       display: flex;
+      flex-wrap: wrap;
       gap: 10px;
       z-index: 1000;
-      flex-wrap: wrap;
     }
-    .toolbar button, .toolbar input[type="file"] {
+    .toolbar button, .toolbar input[type="file"]::file-selector-button {
       padding: 8px 12px;
       border: none;
       border-radius: 5px;
@@ -44,7 +44,7 @@
       font-size: 1rem;
     }
     .toolbar input[type="file"] {
-      background: #666;
+      color: white;
     }
     .night-mode {
       background-color: #121212;
@@ -71,7 +71,11 @@
     <button onclick="adjustFont(-1)">A-</button>
     <label>
       📄 上传词表
-      <input type="file" id="upload" accept=".xlsx" onchange="handleUpload(event)" />
+      <input type="file" id="uploadWordlist" accept=".xlsx" onchange="handleWordlist(event)" />
+    </label>
+    <label>
+      📘 上传 EPUB
+      <input type="file" id="uploadEpub" accept=".epub" onchange="handleEpub(event)" />
     </label>
   </div>
 
@@ -102,6 +106,8 @@
   <h2 id="solitude">Solitude</h2>
   <p class="content">Sample text from "Solitude" chapter focusing on peace, nature, and self-awareness...</p>
 
+  <div id="epubInfo" style="margin-top:2rem; font-weight: bold;"></div>
+
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script>
     let currentFontSize = 100;
@@ -113,7 +119,7 @@
       document.body.style.fontSize = currentFontSize + '%';
     }
 
-    function handleUpload(event) {
+    function handleWordlist(event) {
       const file = event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
@@ -121,7 +127,8 @@
         const data = new Uint8Array(e.target.result);
         const workbook = XLSX.read(data, { type: "array" });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const words = XLSX.utils.sheet_to_json(sheet, { header: 1 }).flat().map(w => String(w).toLowerCase());
+        let words = XLSX.utils.sheet_to_json(sheet, { header: 1 }).map(row => row[0]);
+        words = words.slice(1).map(w => String(w || "").toLowerCase().trim()).filter(w => w);
         highlightWords(words);
       };
       reader.readAsArrayBuffer(file);
@@ -131,11 +138,21 @@
       document.querySelectorAll(".content").forEach(para => {
         let html = para.innerHTML;
         wordList.forEach(word => {
-          const regex = new RegExp("\b(" + word.replace(/[.*+?^${}()|[\]\]/g, "\$&") + ")\b", "gi");
+          const regex = new RegExp("\b(" + word.replace(/[.*+?^${}()|[\]\\]/g, "\$&") + ")\b", "gi");
           html = html.replace(regex, '<span class="highlight">$1</span>');
         });
         para.innerHTML = html;
       });
+    }
+
+    function handleEpub(event) {
+      const file = event.target.files[0];
+      const epubInfo = document.getElementById("epubInfo");
+      if (file && file.name.endsWith(".epub")) {
+        epubInfo.textContent = "已上传 EPUB 文件：" + file.name + "（你可以继续开发用 epub.js 进行展示）";
+      } else {
+        epubInfo.textContent = "请上传 .epub 格式的文件";
+      }
     }
   </script>
 
