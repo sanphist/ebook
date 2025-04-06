@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Walden - Read Online</title>
+  <style>
+    body {
+      font-family: "Georgia", serif;
+      background-color: #fefefe;
+      color: #333;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+      line-height: 1.8;
+      transition: background 0.3s, color 0.3s;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    h1 {
+      font-size: 2.5rem;
+    }
+    h2 {
+      margin-top: 2rem;
+      font-size: 1.8rem;
+    }
+    .toolbar {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 10px;
+      z-index: 1000;
+      flex-wrap: wrap;
+    }
+    .toolbar button, .toolbar input[type="file"] {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 5px;
+      background: #444;
+      color: #fff;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .toolbar input[type="file"] {
+      background: #666;
+    }
+    .night-mode {
+      background-color: #121212;
+      color: #eee;
+    }
+    a {
+      color: #007acc;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .highlight {
+      background-color: yellow;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="toolbar">
+    <button onclick="toggleNight()">🌓</button>
+    <button onclick="adjustFont(1)">A+</button>
+    <button onclick="adjustFont(-1)">A-</button>
+    <label>
+      📄 上传词表
+      <input type="file" id="upload" accept=".xlsx" onchange="handleUpload(event)" />
+    </label>
+  </div>
+
+  <h1>Walden by Henry David Thoreau</h1>
+  <p style="text-align:center;"><em>First published in 1854</em></p>
+
+  <h2>Contents</h2>
+  <ul>
+    <li><a href="#economy">Economy</a></li>
+    <li><a href="#where-i-lived">Where I Lived, And What I Lived For</a></li>
+    <li><a href="#reading">Reading</a></li>
+    <li><a href="#sounds">Sounds</a></li>
+    <li><a href="#solitude">Solitude</a></li>
+  </ul>
+
+  <h2 id="economy">Economy</h2>
+  <p class="content">Sample text from the "Economy" chapter with words like nature, life, simple, solitude...</p>
+
+  <h2 id="where-i-lived">Where I Lived, And What I Lived For</h2>
+  <p class="content">Sample text from "Where I Lived" chapter with focus on freedom, reflection, and deliberate life...</p>
+
+  <h2 id="reading">Reading</h2>
+  <p class="content">Sample text from "Reading" chapter emphasizing books, education, and learning...</p>
+
+  <h2 id="sounds">Sounds</h2>
+  <p class="content">Sample text from "Sounds" chapter discussing the natural environment and perception...</p>
+
+  <h2 id="solitude">Solitude</h2>
+  <p class="content">Sample text from "Solitude" chapter focusing on peace, nature, and self-awareness...</p>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script>
+    let currentFontSize = 100;
+    function toggleNight() {
+      document.body.classList.toggle("night-mode");
+    }
+    function adjustFont(amount) {
+      currentFontSize += amount * 10;
+      document.body.style.fontSize = currentFontSize + '%';
+    }
+
+    function handleUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const words = XLSX.utils.sheet_to_json(sheet, { header: 1 }).flat().map(w => String(w).toLowerCase());
+        highlightWords(words);
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function highlightWords(wordList) {
+      document.querySelectorAll(".content").forEach(para => {
+        let html = para.innerHTML;
+        wordList.forEach(word => {
+          const regex = new RegExp("\b(" + word.replace(/[.*+?^${}()|[\]\]/g, "\$&") + ")\b", "gi");
+          html = html.replace(regex, '<span class="highlight">$1</span>');
+        });
+        para.innerHTML = html;
+      });
+    }
+  </script>
+
+</body>
+</html>
